@@ -1,0 +1,31 @@
+{
+  "app": { "name": "Acoustic Comms Engine" },
+  "auth": {
+    "login": "Wọle",
+    "register": "Ṣẹ̀dá àkàwé",
+    "email": "Íméèlì",
+    "password": "Ọ̀rọ̀ìgbànwọlé"
+  },
+  "nav": {
+    "dashboard": "Dáshíbọ́ọ̀dù",
+    "sessions": "Àwọn ìgbà",
+    "newSession": "Ìgbà tuntun",
+    "coaching": "Ìdánilẹ́kọ̀ọ́",
+    "search": "Ṣàwárí",
+    "settings": "Àwọn ètò"
+  },
+  "session": {
+    "start": "Bẹ̀rẹ Ìgbà",
+    "end": "Parí Ìgbà",
+    "reconnecting": "Tún ń ṣopọ̀...",
+    "disconnected": "Ọ̀pọ̀ ge",
+    "transcript": "Àkọsílẹ̀",
+    "acoustics": "Ìró"
+  },
+  "analysis": {
+    "title": "Ìtúwò",
+    "overall": "Àpapọ̀ Dúdú",
+    "coachingActions": "Àwọn Ìdánilẹ́kọ̀ọ́",
+    "agentTrace": "Ìtọ́kasí Aṣojú"
+  }
+}

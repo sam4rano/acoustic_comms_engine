@@ -1,0 +1,31 @@
+{
+  "app": { "name": "Acoustic Comms Engine" },
+  "auth": {
+    "login": "Log in",
+    "register": "Create account",
+    "email": "Email",
+    "password": "Password"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "sessions": "Sessions",
+    "newSession": "New Session",
+    "coaching": "Coaching",
+    "search": "Search",
+    "settings": "Settings"
+  },
+  "session": {
+    "start": "Start Session",
+    "end": "End Session",
+    "reconnecting": "Reconnecting...",
+    "disconnected": "Disconnected",
+    "transcript": "Transcript",
+    "acoustics": "Acoustics"
+  },
+  "analysis": {
+    "title": "Analysis",
+    "overall": "Overall Score",
+    "coachingActions": "Coaching Actions",
+    "agentTrace": "Agent Trace"
+  }
+}
