@@ -5,19 +5,14 @@
       "framework": "nextjs"
     },
     "backend": {
-      "root": "backend"
+      "root": "backend",
+      "entrypoint": "api/index.py",
+      "runtime": "python"
     }
   },
   "rewrites": [
     {
       "source": "/api/v1/(.*)",
-      "destination": {
-        "type": "service",
-        "service": "backend"
-      }
-    },
-    {
-      "source": "/ws/(.*)",
       "destination": {
         "type": "service",
         "service": "backend"
