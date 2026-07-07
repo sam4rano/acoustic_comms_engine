@@ -35,7 +35,7 @@ class SpeechService:
 
         # 1. Encode
         async with self._encode_lock:
-            embedding = await self._encoder.encode(chunk.waveform)
+            embedding = await self._encoder.encode(chunk.waveform, chunk.sample_rate)
 
         result.embedding = embedding
 

@@ -26,9 +26,9 @@ echo "Building Docker images..."
 docker compose -f "${ROOT_DIR}/infra/docker-compose.yml" build
 
 # ── Start infrastructure services ────────────────────────────────────
-echo "Starting infrastructure services (postgres, redis, qdrant, minio, ollama)..."
+echo "Starting infrastructure services (postgres, redis, qdrant, minio)..."
 docker compose -f "${ROOT_DIR}/infra/docker-compose.yml" up -d \
-    postgres redis qdrant minio ollama
+    postgres redis qdrant minio
 
 # ── Wait for healthy ─────────────────────────────────────────────────
 echo "Waiting for services to become healthy..."
@@ -53,18 +53,10 @@ wait_for_healthy() {
 
 wait_for_healthy postgres
 wait_for_healthy redis
-wait_for_healthy ollama
 
 echo "All infrastructure services ready."
 
-# ── Run migrations ──────────────────────────────────────────────────
-echo "Running database migrations..."
-docker compose -f "${ROOT_DIR}/infra/docker-compose.yml" run --rm \
-    -e DATABASE_URL="postgresql+asyncpg://postgres:postgres@postgres:5432/acoustic_comms" \
-    api \
-    alembic upgrade head
-
-echo "Migrations complete."
+echo "Tables are auto-created on API startup (create_all)."
 
 # ── Print URLs ──────────────────────────────────────────────────────
 echo ""
@@ -76,7 +68,6 @@ echo "  PgBouncer:  postgresql://postgres:postgres@localhost:5433/acoustic_comms
 echo "  Redis:      redis://localhost:6379"
 echo "  Qdrant:     http://localhost:6333"
 echo "  MinIO:      http://localhost:9000 (console: http://localhost:9001)"
-echo "  Ollama:     http://localhost:11434"
 echo ""
 echo "=== Getting started ==="
 echo "  docker compose -f infra/docker-compose.yml up -d"

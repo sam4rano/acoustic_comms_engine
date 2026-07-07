@@ -1,6 +1,8 @@
 import logging
 
 from app.core.config import settings
+from app.models import Base
+from app.core.deps import _engine
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +18,10 @@ async def startup() -> None:
     logger.info("Qdrant:       %s", settings.QDRANT_URL)
     logger.info("LLM endpoint: %s", settings.LLM_BASE_URL)
     logger.info("Log level:    %s", settings.LOG_LEVEL)
+
+    async with _engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database tables created / verified")
 
 
 async def shutdown() -> None:

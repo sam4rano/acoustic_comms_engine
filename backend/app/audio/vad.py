@@ -26,19 +26,18 @@ class VAD:
         if cls._model is not None:
             return cls._model
 
-        if cls._model is None:
-            try:
-                import silero_vad
+        try:
+            import silero_vad
 
-                cls._model, utils = torch.hub.load(
-                    repo_or_dir="snakers4/silero-vad",
-                    model="silero_vad",
-                    force_reload=False,
-                    onnx=False,
-                    trust_repo=True,
-                )
-            except Exception as exc:
-                raise VADError(f"Failed to load Silero VAD model: {exc}") from exc
+            cls._model, utils = torch.hub.load(
+                repo_or_dir="snakers4/silero-vad",
+                model="silero_vad",
+                force_reload=False,
+                onnx=False,
+                trust_repo=True,
+            )
+        except Exception as exc:
+            raise VADError(f"Failed to load Silero VAD model: {exc}") from exc
 
         return cls._model
 
@@ -85,6 +84,17 @@ class VAD:
             raise VADError(
                 f"Expected shape [1, T], got {list(waveform.shape)}"
             )
+
+        # Silero VAD requires at least 512 samples at 16 kHz
+        min_samples = max(512, int(sample_rate / 31.25))
+        if waveform.size(-1) < min_samples:
+            if waveform.size(-1) < 64:
+                # Too short to be useful — return single non-speech segment
+                return [VADSegment(start_ms=0, end_ms=1, is_speech=False)]
+            # Pad with zeros
+            pad = torch.zeros(1, min_samples - waveform.size(-1))
+            waveform = torch.cat([waveform, pad], dim=-1)
+            logger.debug("Padded short waveform (%d → %d samples)", waveform.size(-1) - pad.size(-1) + pad.size(-1), waveform.size(-1))
 
         model = cls._load_silero_vad()
 

@@ -1,5 +1,8 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+import json
+from typing import Annotated
+
+from pydantic import field_validator, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict, NoDecode
 
 
 class Settings(BaseSettings):
@@ -16,9 +19,14 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
 
     # Database
+    # For Supabase, use the session pooler URL (port 6543)
     DATABASE_URL: str = Field(
         default="postgresql+asyncpg://postgres:postgres@localhost:5432/acoustic_comms"
     )
+
+    # Supabase (optional — for Storage, Auth SDK usage)
+    SUPABASE_URL: str | None = None
+    SUPABASE_ANON_KEY: str | None = None
 
     # Cache / Queue
     REDIS_URL: str = Field(default="redis://localhost:6379/0")
@@ -52,7 +60,22 @@ class Settings(BaseSettings):
     JWT_REFRESH_EXPIRATION_DAYS: int = 7
 
     # CORS
-    CORS_ORIGINS: list[str] = ["*"]
+    CORS_ORIGINS: Annotated[list[str], NoDecode] = ["*"]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: object) -> list[str]:
+        if isinstance(v, str):
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+            except json.JSONDecodeError:
+                pass
+            return [o.strip() for o in v.split(",") if o.strip()]
+        if isinstance(v, list):
+            return v
+        return ["*"]
 
     # Analysis pipeline
     ANALYSIS_TIMEOUT_PER_AGENT_S: float = 120.0

@@ -14,12 +14,12 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard", label: "dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/sessions", label: "sessions", icon: Mic },
-  { href: "/dashboard/sessions/new", label: "newSession", icon: PlusCircle },
-  { href: "/dashboard/coaching", label: "coaching", icon: GraduationCap },
-  { href: "/dashboard/search", label: "search", icon: Search },
-  { href: "/dashboard/settings", label: "settings", icon: Settings },
+  { href: "/", label: "dashboard", icon: LayoutDashboard },
+  { href: "/sessions", label: "sessions", icon: Mic },
+  { href: "/sessions/new", label: "newSession", icon: PlusCircle },
+  { href: "/coaching", label: "coaching", icon: GraduationCap },
+  { href: "/search", label: "search", icon: Search },
+  { href: "/settings", label: "settings", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -29,15 +29,15 @@ export function Sidebar() {
   return (
     <aside className="flex h-full w-64 flex-col border-r border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
       <div className="flex h-14 items-center border-b border-zinc-200 px-6 dark:border-zinc-800">
-        <Link href="/dashboard" className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+        <Link href="/" className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
           Acoustic Comms
         </Link>
       </div>
       <nav className="flex-1 space-y-1 p-3">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active =
-            href === "/dashboard"
-              ? pathname === "/dashboard"
+            href === "/"
+              ? pathname === "/"
               : pathname.startsWith(href);
           return (
             <Link

@@ -25,6 +25,20 @@ DIMENSION_WEIGHTS: dict[str, float] = {
     "engagement": 0.15,
 }
 
+_DIMENSION_ALIASES: dict[str, str] = {
+    "clarity": "clarity",
+    "clear": "clarity",
+    "pacing": "pacing",
+    "pace": "pacing",
+    "empathy": "empathy",
+    "assertiveness": "assertiveness",
+    "assertive": "assertiveness",
+    "fluency": "fluency",
+    "fluent": "fluency",
+    "engagement": "engagement",
+    "engaged": "engagement",
+}
+
 COACHING_TEMPLATES: dict[str, list[dict]] = {
     "clarity": [
         {
@@ -128,7 +142,7 @@ class Scorer(BaseAgent):
         weights = {}
         total_weight = 0.0
         for d in dimensions:
-            dl = d.lower()
+            dl = _DIMENSION_ALIASES.get(d.lower(), d.lower())
             if dl in DIMENSION_WEIGHTS:
                 weights[dl] = DIMENSION_WEIGHTS[dl]
                 total_weight += DIMENSION_WEIGHTS[dl]
@@ -147,10 +161,11 @@ class Scorer(BaseAgent):
         verification_score: float,
     ) -> list[DimensionScore]:
         base_score = 50.0
-        claim_adjustments: dict[str, list[float]] = {d: [] for d in dimensions}
+        normalized_dims = [_DIMENSION_ALIASES.get(d.lower(), d.lower()) for d in dimensions]
+        claim_adjustments: dict[str, list[float]] = {d: [] for d in normalized_dims}
 
         for claim in claims:
-            dim = claim.dimension.lower()
+            dim = _DIMENSION_ALIASES.get(claim.dimension.lower(), claim.dimension.lower())
             if dim not in claim_adjustments:
                 continue
             if claim.polarity == "strength":
@@ -161,9 +176,8 @@ class Scorer(BaseAgent):
                 claim_adjustments[dim].append(0.0)
 
         scores: list[DimensionScore] = []
-        for dim in dimensions:
-            dl = dim.lower()
-            adjustments = claim_adjustments.get(dl, [])
+        for dim in normalized_dims:
+            adjustments = claim_adjustments.get(dim, [])
             raw_score = base_score + sum(adjustments)
             final_score = max(0.0, min(100.0, raw_score))
 
@@ -183,11 +197,11 @@ class Scorer(BaseAgent):
                 plausible = max(0.1, verification_score)
 
             scores.append(DimensionScore(
-                dimension=dl,
+                dimension=dim,
                 score=round(final_score, 1),
                 confidence=round(plausible, 2),
                 rationale="; ".join(rationale_parts),
-                evidence=self._claim_evidence_for_dimension(claims, dl),
+                evidence=self._claim_evidence_for_dimension(claims, dim),
             ))
 
         return scores
@@ -211,8 +225,9 @@ class Scorer(BaseAgent):
         sorted_dims = sorted(dimension_scores, key=lambda d: d.score)
         actions: list[CoachingAction] = []
 
-        for ds in sorted_dims[:3]:
-            templates = COACHING_TEMPLATES.get(ds.dimension, [])
+        for ds in sorted_dims:
+            canonical = _DIMENSION_ALIASES.get(ds.dimension, ds.dimension)
+            templates = COACHING_TEMPLATES.get(canonical, [])
             if not templates:
                 continue
             tpl = templates[0]
@@ -226,10 +241,22 @@ class Scorer(BaseAgent):
                 priority=tpl["priority"],
                 practice_tip=tpl["practice_tip"],
                 related_turns=related_turns,
-                dimension=ds.dimension,
+                dimension=canonical,
+            ))
+            if len(actions) >= 5:
+                break
+
+        if not actions:
+            actions.append(CoachingAction(
+                title="Practice active speaking",
+                description="Record yourself speaking on any topic to receive personalized coaching.",
+                priority="medium",
+                practice_tip="Speak for at least 30 seconds on a topic you know well.",
+                related_turns=[],
+                dimension="general",
             ))
 
-        return actions[:5]
+        return actions
 
     def _collect_evidence(self, claims: list[Claim]) -> list[EvidenceRef]:
         seen: set[str] = set()

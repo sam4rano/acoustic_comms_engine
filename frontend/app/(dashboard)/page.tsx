@@ -18,7 +18,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Dashboard</h1>
         <Link
-          href="/dashboard/sessions/new"
+          href="/sessions/new"
           className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
         >
           <PlusCircle className="h-4 w-4" />
@@ -53,7 +53,7 @@ export default function DashboardPage() {
         description="Start your first communication analysis session to see results here."
         action={
           <Link
-            href="/dashboard/sessions/new"
+            href="/sessions/new"
             className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
           >
             Start a Session

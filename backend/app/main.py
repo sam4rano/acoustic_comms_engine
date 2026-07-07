@@ -19,25 +19,40 @@ from app.speech.service import SpeechService
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await startup()
-    _init_streaming()
+    await _init_streaming()
     yield
     await shutdown()
 
 
-def _init_streaming() -> None:
-    """Wire up streaming dependencies lazily (encoder/heads may not be loaded)."""
+async def _init_streaming() -> None:
+    """Wire up streaming dependencies. Encoder model loads lazily on first use."""
     try:
-        audio_pipeline = AudioPipeline()
         encoder = SpeechEncoder(device="cpu")
+        audio_pipeline = AudioPipeline()
         registry = HeadRegistry()
         speech_service = SpeechService(encoder=encoder, registry=registry)
-        manager = StreamSessionManager()
+
+        redis = None
+        try:
+            from urllib.parse import urlparse
+            from app.memory.backends.redis_cache import RedisCache
+            parsed = urlparse(settings.REDIS_URL)
+            redis = RedisCache(
+                host=parsed.hostname or "localhost",
+                port=parsed.port or 6379,
+                db=int((parsed.path or "/0").lstrip("/") or 0),
+            )
+        except Exception:
+            import logging
+            logging.getLogger(__name__).debug("Redis not available for stream sessions")
+
+        manager = StreamSessionManager(redis=redis)
         dispatcher = StreamDispatcher(audio_pipeline, speech_service, manager)
         setup_streaming(manager, dispatcher)
-    except Exception:
+    except Exception as exc:
         import logging
         logging.getLogger(__name__).warning(
-            "Streaming layer not fully initialized — encoder model may not be loaded yet"
+            "Streaming layer not fully initialized: %s", exc
         )
 
 

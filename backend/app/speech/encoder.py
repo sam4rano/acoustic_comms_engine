@@ -42,9 +42,12 @@ class SpeechEncoder:
     def is_loaded(self) -> bool:
         return self._model is not None
 
-    async def encode(self, waveform: torch.Tensor) -> AcousticEmbedding:
+    async def encode(self, waveform: torch.Tensor, sample_rate: int = 16000) -> AcousticEmbedding:
         if self._model is None:
-            raise RuntimeError("Encoder model not loaded. Call load_model() first.")
+            from app.core.config import settings
+            checkpoint = settings.SPEECH_ENCODER_PATH or settings.SPEECH_ENCODER
+            logger.info("Encoder model not loaded — loading %s lazily", checkpoint)
+            await self.load_model(checkpoint)
 
         if waveform.dim() not in (1, 2):
             raise ValueError(
@@ -61,7 +64,7 @@ class SpeechEncoder:
 
         try:
             with torch.no_grad():
-                embedding_tensor = self._model(waveform.to(self.device))
+                embedding_tensor = self._model(waveform.to(self.device), sample_rate)
         except RuntimeError as exc:
             if "out of memory" in str(exc).lower() and self.device != "cpu":
                 logger.warning("GPU OOM during encode, falling back to CPU")
@@ -89,15 +92,17 @@ async def _async_torch_load(checkpoint: str, device: str) -> torch.nn.Module:
     loop = asyncio.get_running_loop()
 
     def _load() -> torch.nn.Module:
-        if checkpoint.endswith(".pt") or checkpoint.endswith(".pth"):
+        if any(checkpoint.endswith(ext) for ext in (".pt", ".pth", ".jit")):
             model = torch.jit.load(checkpoint, map_location=device)
         else:
-            model = torch.hub.load(
+            result = torch.hub.load(
                 repo_or_dir="snakers4/silero-vad",
                 model=checkpoint,
                 force_reload=False,
                 trust_repo=True,
             )
+            # silero_vad returns (model, utils) tuple
+            model = result[0] if isinstance(result, tuple) else result
             model._encoder_version = f"{checkpoint}@1.0"
         return model
 

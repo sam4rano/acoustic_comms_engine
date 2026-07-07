@@ -23,7 +23,7 @@ class PipelineConfig:
     denoise: bool = True
     chunk: bool = True
     target_sample_rate: int = 16000
-    chunk_size_ms: int = 30
+    chunk_size_ms: int = 32
     chunk_overlap_ms: int = 10
 
 

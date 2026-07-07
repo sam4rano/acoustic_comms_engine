@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d acoustic_comms"]
       interval: 5s
@@ -89,29 +89,6 @@ services:
     networks:
       - app-network
 
-  ollama:
-    image: ollama/ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_models:/root/.ollama
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
-    restart: unless-stopped
-    networks:
-      - app-network
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-
   api:
     build:
       context: ../backend
@@ -125,8 +102,6 @@ services:
         condition: service_healthy
       qdrant:
         condition: service_started
-      ollama:
-        condition: service_healthy
     env_file:
       - ../.env
     environment:
@@ -134,20 +109,15 @@ services:
       REDIS_URL: redis://redis:6379/0
       QDRANT_URL: http://qdrant:6333
       MINIO_ENDPOINT: minio:9000
-      LLM_BASE_URL: http://ollama:11434/v1
-      CORS_ORIGINS: http://localhost:3000
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://ollama:11434/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-not-needed}
+      LLM_MODEL: ${LLM_MODEL:-qwen3-8b-instruct}
+      CORS_ORIGINS: http://localhost:3000,http://192.168.1.180:3000
     volumes:
       - ../backend:/app
     restart: unless-stopped
     networks:
       - app-network
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
 
   frontend:
     build:
@@ -172,7 +142,6 @@ volumes:
   pgdata:
   qdrant_storage:
   minio_data:
-  ollama_models:
 
 networks:
   app-network:
