@@ -1,51 +1,49 @@
 export type WsMessageType =
-  | "audio_chunk"
-  | "transcript_delta"
-  | "transcript_final"
+  | "audio_frame"
+  | "start_session"
+  | "end_session"
+  | "transcript"
   | "acoustic_label"
-  | "emotion"
-  | "prosody"
-  | "stress"
-  | "session_state"
-  | "error";
+  | "audio_event"
+  | "error"
+  | "state_change"
+  | "ping"
+  | "pong"
+  | "config_update";
 
 export interface WsMessage {
   type: WsMessageType;
   payload: unknown;
-  ts: number;
+  message_id?: string;
 }
 
-export interface AudioChunkPayload {
-  sequence: number;
-  data: string;
-  sample_rate: number;
-}
-
-export interface TranscriptDeltaPayload {
+export interface TranscriptPayload {
   turn_id: string;
   text: string;
-  is_final: boolean;
-  speaker_label: string;
   start_ms: number;
   end_ms: number;
   confidence: number;
+  is_partial: boolean;
+  speaker_label: string;
 }
 
 export interface AcousticLabelPayload {
-  turn_id: string;
-  head: "emotion" | "prosody" | "stress" | "fluency";
+  head: string;
   label: string;
-  score: number;
-  start_ms: number;
-  end_ms: number;
+  confidence: number;
+  metadata?: Record<string, unknown>;
+  turn_id: string;
 }
 
-export interface SessionStatePayload {
-  status: "idle" | "connecting" | "live" | "reconnecting" | "ended";
+export interface StateChangePayload {
   session_id: string;
+  status: string;
+  config?: Record<string, unknown>;
+  frames_processed?: number;
+  errors?: number;
 }
 
 export interface ErrorPayload {
-  code: string;
   message: string;
+  sequence?: number;
 }
